@@ -1,5 +1,5 @@
-#include <SDL/SDL_opengl.h>
 
+#include <GL/glfw.h>
 #include <v8.h>
 
 #include <node.h>

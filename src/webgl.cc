@@ -16,6 +16,7 @@ using namespace node;
 #define WINDOW_DEFAULT_WIDTH 640
 #define WINDOW_DEFAULT_HEIGHT 480
 
+/*
 class Window : public EventEmitter {
 public:
 
@@ -183,12 +184,39 @@ private:
 };
 
 Window *Window::window;
+*/
 
-extern "C" void
-init (Handle<Object> target) {
-    HandleScope scope;
+static Handle<Value> initialize(Arguments const& args)
+{
+  HandleScope scope;
+  
+  int width = args.Length() >= 1 && args[0]->IsInt32() ? args[0]->Int32Value() : 640;
+  int height = args.Length() >= 2 && args[1]->IsInt32() ? args[1]->Int32Value() : 480;
+  int fullscreen = args.Length() == 3 && args[2]->IsBoolean() && args[2]->BooleanValue() ? GLFW_FULLSCREEN : GLFW_WINDOW;
+  
+  glfwInit();
+  glfwOpenWindow(width, height, 8, 8, 8, 0, 24, 0, fullscreen);
+  
+  return scope.Close(Boolean::New(true));
+}
 
-    GLContext::Initialize(target);
-    Image::Initialize(target);
-    Window::Initialize(target);
+static Handle<Value> destroy(Arguments const& args)
+{
+  HandleScope scope;
+  
+  glfwCloseWindow();
+  glfwTerminate();
+  
+  return scope.Close(Boolean::New(true));
+}
+
+extern "C" void init(Handle<Object> target)
+{
+  HandleScope scope;
+  
+  NODE_SET_METHOD(target, "initialize", initialize);
+  NODE_SET_METHOD(target, "destroy", destroy);
+
+  GLContext::Initialize(target);
+  Image::Initialize(target);
 }
