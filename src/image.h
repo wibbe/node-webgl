@@ -2,83 +2,89 @@
 #define IMAGE_H_
 
 #include <v8.h>
-
 #include <node.h>
-
+#include <string>
 #include <FreeImage.h>
 
 using namespace v8;
 using namespace node;
 
-class Image : public EventEmitter {
-public:
+class Image : public EventEmitter
+{
+  public:
+    Image()
+      : EventEmitter()
+    { }
 
-    static void
-    Initialize (Handle<Object> target) {
-	HandleScope scope;
-
-	Local<FunctionTemplate> t = FunctionTemplate::New(New);
-
-        t->Inherit(EventEmitter::constructor_template);
-        t->InstanceTemplate()->SetInternalFieldCount(1);
-
-	t->PrototypeTemplate()->SetAccessor(String::New("width"), WidthGetter);
-	t->PrototypeTemplate()->SetAccessor(String::New("height"), HeightGetter);
-	t->PrototypeTemplate()->SetAccessor(String::New("src"), SrcGetter, SrcSetter);
-
-        NODE_SET_PROTOTYPE_METHOD(t, "addEventListener", AddEventListener);
-
-	target->Set(String::NewSymbol("Image"), t->GetFunction());
-
-	FreeImage_Initialise(true);
+    virtual ~Image()
+    {
+	    if (m_image)
+	      FreeImage_Unload(m_image);
     }
 
-    int
-    GetWidth () {
-	return FreeImage_GetWidth(image_bmp);
+    static void initialize(Handle<Object> target)
+    {
+      HandleScope scope;
+
+      Local<FunctionTemplate> t = FunctionTemplate::New(constructor);
+
+      t->Inherit(EventEmitter::constructor_template);
+      t->InstanceTemplate()->SetInternalFieldCount(1);
+
+    	t->PrototypeTemplate()->SetAccessor(String::New("width"), WidthGetter);
+    	t->PrototypeTemplate()->SetAccessor(String::New("height"), HeightGetter);
+    	t->PrototypeTemplate()->SetAccessor(String::New("src"), SrcGetter, SrcSetter);
+
+      NODE_SET_PROTOTYPE_METHOD(t, "addEventListener", AddEventListener);
+
+    	target->Set(String::NewSymbol("Image"), t->GetFunction());
     }
 
-    int
-    GetHeight () {
-	return FreeImage_GetHeight(image_bmp);
+    int getWidth()
+    {
+      return FreeImage_GetWidth(m_image);
     }
 
-    void *
-    GetData () {
-	BYTE *pixels = FreeImage_GetBits(image_bmp);
-
-	// FreeImage stores data in BGR
-	// Convert from BGR to RGB
-	for(int i = 0; i < FreeImage_GetWidth(image_bmp) * FreeImage_GetHeight(image_bmp); i++)
-	{
-		BYTE temp = pixels[i * 4 + 0];
-		pixels[i * 4 + 0] = pixels[i * 4 + 2];
-		pixels[i * 4 + 2] = temp;
-	}
-
-	return pixels;
+    int getHeight()
+    {
+	    return FreeImage_GetHeight(m_image);
     }
 
-    void
-    Load (const char *filename) {
-	this->filename = (char *)filename;
+    void * getData()
+    {
+      BYTE * pixels = FreeImage_GetBits(m_image);
 
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(filename, 0);
-	image_bmp = FreeImage_Load(format, filename, 0);
-	image_bmp = FreeImage_ConvertTo32Bits(image_bmp);
+      // FreeImage stores data in BGR
+      // Convert from BGR to RGB
+      for(int i = 0; i < FreeImage_GetWidth(m_image) * FreeImage_GetHeight(m_image); i++)
+      {
+        BYTE temp = pixels[i * 4 + 0];
+        pixels[i * 4 + 0] = pixels[i * 4 + 2];
+        pixels[i * 4 + 2] = temp;
+      }
+
+	    return pixels;
     }
 
-protected:
+    void load(std::string const& filename)
+    {
+    	m_filename = filename;
 
-    static Handle<Value>
-    New (const Arguments& args) {
-	HandleScope scope;
+    	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(m_filename.c_str(), 0);
+    	m_image = FreeImage_Load(format, m_filename.c_str(), 0);
+    	m_image = FreeImage_ConvertTo32Bits(m_image);
+    }
 
+  protected:
 
-	Image *image = new Image();
-	image->Wrap(args.This());
+    static Handle<Value> constructor(Arguments const& args)
+    {
+    	HandleScope scope;
 
-	return args.This();
+    	Image * image = new Image();
+    	image->Wrap(args.This());
+
+    	return args.This();
     }
 
     static Handle<Value>
@@ -87,7 +93,7 @@ protected:
 
 	Image *image = ObjectWrap::Unwrap<Image>(info.This());
 
-	return scope.Close(Integer::New(image->GetWidth()));
+	return scope.Close(Integer::New(image->getWidth()));
     }
 
 
@@ -97,7 +103,7 @@ protected:
 
 	Image *image = ObjectWrap::Unwrap<Image>(info.This());
 
-	return scope.Close(Integer::New(image->GetHeight()));
+	return scope.Close(Integer::New(image->getHeight()));
     }
 
 
@@ -107,7 +113,7 @@ protected:
 
 	Image *image = ObjectWrap::Unwrap<Image>(info.This());
 
-	return scope.Close(String::New(image->filename));
+	return scope.Close(String::New(image->m_filename.c_str()));
     }
 
     static void
@@ -116,7 +122,7 @@ protected:
 
 	Image *image = ObjectWrap::Unwrap<Image>(info.This());
 	String::Utf8Value filename_s(value->ToString());
-	image->Load(*filename_s);
+	image->load(*filename_s);
 
 	image->Emit(String::New("load"), 0, NULL);
     }
@@ -140,20 +146,10 @@ protected:
 	return f->Call(args.This(), args.Length(), values);
     }
 
-    Image () : EventEmitter() {
-    }
-
-    ~Image () {
-	if (image_bmp) FreeImage_Unload(image_bmp);
-	FreeImage_DeInitialise();
-    }
-
-private:
-
-    FIBITMAP *image_bmp;
-    char *filename;
-    void *data;
-
+  private:
+    FIBITMAP * m_image;
+    std::string m_filename;
+    void * m_data;
 };
 
 #endif  // IMAGE_H_

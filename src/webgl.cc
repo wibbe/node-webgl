@@ -4,6 +4,7 @@
 
 #include <node.h>
 #include <node_events.h>
+#include <FreeImage.h>
 
 #include "glcontext.h"
 #include "image.h"
@@ -194,6 +195,8 @@ static Handle<Value> initialize(Arguments const& args)
   int height = args.Length() >= 2 && args[1]->IsInt32() ? args[1]->Int32Value() : 480;
   int fullscreen = args.Length() == 3 && args[2]->IsBoolean() && args[2]->BooleanValue() ? GLFW_FULLSCREEN : GLFW_WINDOW;
   
+  FreeImage_Initialise(true);
+  
   glfwInit();
   glfwOpenWindow(width, height, 8, 8, 8, 0, 24, 0, fullscreen);
   
@@ -207,6 +210,8 @@ static Handle<Value> destroy(Arguments const& args)
   glfwCloseWindow();
   glfwTerminate();
   
+  FreeImage_DeInitialise();  
+
   return scope.Close(Boolean::New(true));
 }
 
@@ -217,6 +222,6 @@ extern "C" void init(Handle<Object> target)
   NODE_SET_METHOD(target, "initialize", initialize);
   NODE_SET_METHOD(target, "destroy", destroy);
 
-  GLContext::Initialize(target);
-  Image::Initialize(target);
+  GLContext::initialize(target);
+  Image::initialize(target);
 }

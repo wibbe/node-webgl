@@ -10,140 +10,141 @@
 using namespace v8;
 using namespace node;
 
-class GLContext : public ObjectWrap {
-public:
+class GLContext : public ObjectWrap
+{
+  public:
 
-    static void
-    Initialize (Handle<Object> target) {
-        HandleScope scope;
+    static void initialize(Handle<Object> target)
+    {
+      HandleScope scope;
 
-        Local<FunctionTemplate> t = FunctionTemplate::New(New);
-	constructor_template = Persistent<FunctionTemplate>::New(t);
+      Local<FunctionTemplate> t = FunctionTemplate::New(constructor);
+    	m_constructorTemplate = Persistent<FunctionTemplate>::New(t);
 
-        t->InstanceTemplate()->SetInternalFieldCount(1);
+      t->InstanceTemplate()->SetInternalFieldCount(1);
 
-	// Constants
-	Handle<ObjectTemplate> proto = t->PrototypeTemplate();
+    	// Constants
+    	Handle<ObjectTemplate> proto = t->PrototypeTemplate();
 
-	SetConstant(proto, "RGB", 0x1907);
-	SetConstant(proto, "RGBA", 0x1908);
+    	SetConstant(proto, "RGB", 0x1907);
+    	SetConstant(proto, "RGBA", 0x1908);
 	
-	SetConstant(proto, "DEPTH_BUFFER_BIT",   0x00000100);
-	SetConstant(proto, "STENCIL_BUFFER_BIT", 0x00000400);
-	SetConstant(proto, "COLOR_BUFFER_BIT",   0x00004000);
+    	SetConstant(proto, "DEPTH_BUFFER_BIT",   0x00000100);
+    	SetConstant(proto, "STENCIL_BUFFER_BIT", 0x00000400);
+    	SetConstant(proto, "COLOR_BUFFER_BIT",   0x00004000);
 
-	SetConstant(proto, "POINTS",         0x0000);
-	SetConstant(proto, "LINES",          0x0001);
-	SetConstant(proto, "LINE_LOOP",      0x0002);
-	SetConstant(proto, "LINE_STRIP",     0x0003);
-	SetConstant(proto, "TRIANGLES",      0x0004);
-	SetConstant(proto, "TRIANGLE_STRIP", 0x0005);
-	SetConstant(proto, "TRIANGLE_FAN",   0x0006);
+    	SetConstant(proto, "POINTS",         0x0000);
+    	SetConstant(proto, "LINES",          0x0001);
+    	SetConstant(proto, "LINE_LOOP",      0x0002);
+    	SetConstant(proto, "LINE_STRIP",     0x0003);
+    	SetConstant(proto, "TRIANGLES",      0x0004);
+    	SetConstant(proto, "TRIANGLE_STRIP", 0x0005);
+    	SetConstant(proto, "TRIANGLE_FAN",   0x0006);
 
-	SetConstant(proto, "ARRAY_BUFFER",                 0x8892);
-	SetConstant(proto, "ELEMENT_ARRAY_BUFFER",         0x8893);
-	SetConstant(proto, "ARRAY_BUFFER_BINDING",         0x8894);
-	SetConstant(proto, "ELEMENT_ARRAY_BUFFER_BINDING", 0x8895);
+    	SetConstant(proto, "ARRAY_BUFFER",                 0x8892);
+    	SetConstant(proto, "ELEMENT_ARRAY_BUFFER",         0x8893);
+    	SetConstant(proto, "ARRAY_BUFFER_BINDING",         0x8894);
+    	SetConstant(proto, "ELEMENT_ARRAY_BUFFER_BINDING", 0x8895);
 
-        SetConstant(proto, "STREAM_DRAW",  0x88E0);
-	SetConstant(proto, "STATIC_DRAW",  0x88E4);
-	SetConstant(proto, "DYNAMIC_DRAW", 0x88E8);
+      SetConstant(proto, "STREAM_DRAW",  0x88E0);
+    	SetConstant(proto, "STATIC_DRAW",  0x88E4);
+    	SetConstant(proto, "DYNAMIC_DRAW", 0x88E8);
 		
-        SetConstant(proto, "FRONT",          0x0404);
-        SetConstant(proto, "BACK",           0x0405);
-        SetConstant(proto, "FRONT_AND_BACK", 0x0408);
- 
-        SetConstant(proto, "BYTE",           0x1400);
-        SetConstant(proto, "UNSIGNED_BYTE",  0x1401);
-        SetConstant(proto, "SHORT",          0x1402);
-        SetConstant(proto, "UNSIGNED_SHORT", 0x1403);
-        SetConstant(proto, "INT",            0x1404);
-        SetConstant(proto, "UNSIGNED_INT",   0x1405);
-        SetConstant(proto, "FLOAT",          0x1406);
+      SetConstant(proto, "FRONT",          0x0404);
+      SetConstant(proto, "BACK",           0x0405);
+      SetConstant(proto, "FRONT_AND_BACK", 0x0408);
 
-	SetConstant(proto, "FRAGMENT_SHADER", 0x8B30);
-        SetConstant(proto, "VERTEX_SHADER",   0x8B31);
+      SetConstant(proto, "BYTE",           0x1400);
+      SetConstant(proto, "UNSIGNED_BYTE",  0x1401);
+      SetConstant(proto, "SHORT",          0x1402);
+      SetConstant(proto, "UNSIGNED_SHORT", 0x1403);
+      SetConstant(proto, "INT",            0x1404);
+      SetConstant(proto, "UNSIGNED_INT",   0x1405);
+      SetConstant(proto, "FLOAT",          0x1406);
 
-	SetConstant(proto, "NEAREST", 0x2600);
-	SetConstant(proto, "LINEAR",  0x2601);
+    	SetConstant(proto, "FRAGMENT_SHADER", 0x8B30);
+      SetConstant(proto, "VERTEX_SHADER",   0x8B31);
 
-	SetConstant(proto, "TEXTURE_MAG_FILTER", 0x2800);
-	SetConstant(proto, "TEXTURE_MIN_FILTER", 0x2801);
-	SetConstant(proto, "TEXTURE_WRAP_S",     0x2802);
-	SetConstant(proto, "TEXTURE_WRAP_T",     0x2803);
+    	SetConstant(proto, "NEAREST", 0x2600);
+    	SetConstant(proto, "LINEAR",  0x2601);
 
-	SetConstant(proto, "TEXTURE_2D", 0x0DE1);
-	SetConstant(proto, "TEXTURE",    0x1702);
+    	SetConstant(proto, "TEXTURE_MAG_FILTER", 0x2800);
+    	SetConstant(proto, "TEXTURE_MIN_FILTER", 0x2801);
+    	SetConstant(proto, "TEXTURE_WRAP_S",     0x2802);
+    	SetConstant(proto, "TEXTURE_WRAP_T",     0x2803);
 
-	SetConstant(proto, "REPEAT",          0x2901);
-	SetConstant(proto, "CLAMP_TO_EDGE",   0x812F);
-	SetConstant(proto, "MIRRORED_REPEAT", 0x8370);
+    	SetConstant(proto, "TEXTURE_2D", 0x0DE1);
+    	SetConstant(proto, "TEXTURE",    0x1702);
 
-	// WebGL-specific enums
-	SetConstant(proto, "UNPACK_FLIP_Y_WEBGL", UNPACK_FLIP_Y_WEBGL);
+    	SetConstant(proto, "REPEAT",          0x2901);
+    	SetConstant(proto, "CLAMP_TO_EDGE",   0x812F);
+    	SetConstant(proto, "MIRRORED_REPEAT", 0x8370);
+
+    	// WebGL-specific enums
+    	SetConstant(proto, "UNPACK_FLIP_Y_WEBGL", UNPACK_FLIP_Y_WEBGL);
 	
-	// Methods
-        NODE_SET_PROTOTYPE_METHOD(t, "viewport", Viewport);
+  	// Methods
+      NODE_SET_PROTOTYPE_METHOD(t, "viewport", Viewport);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "createBuffer", CreateBuffer);
-        NODE_SET_PROTOTYPE_METHOD(t, "bindBuffer", BindBuffer);
-        NODE_SET_PROTOTYPE_METHOD(t, "bufferData", BufferData);
+      NODE_SET_PROTOTYPE_METHOD(t, "createBuffer", CreateBuffer);
+      NODE_SET_PROTOTYPE_METHOD(t, "bindBuffer", BindBuffer);
+      NODE_SET_PROTOTYPE_METHOD(t, "bufferData", BufferData);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "vertexAttribPointer", VertexAttribPointer);
-        NODE_SET_PROTOTYPE_METHOD(t, "getAttribLocation", GetAttribLocation);
-        NODE_SET_PROTOTYPE_METHOD(t, "bindAttribLocation", BindAttribLocation);
-        NODE_SET_PROTOTYPE_METHOD(t, "enableVertexAttribArray", EnableVertexAttribArray);
+      NODE_SET_PROTOTYPE_METHOD(t, "vertexAttribPointer", VertexAttribPointer);
+      NODE_SET_PROTOTYPE_METHOD(t, "getAttribLocation", GetAttribLocation);
+      NODE_SET_PROTOTYPE_METHOD(t, "bindAttribLocation", BindAttribLocation);
+      NODE_SET_PROTOTYPE_METHOD(t, "enableVertexAttribArray", EnableVertexAttribArray);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "getUniformLocation", GetUniformLocation);
-        NODE_SET_PROTOTYPE_METHOD(t, "uniform1i", Uniform1i);
-        NODE_SET_PROTOTYPE_METHOD(t, "uniformMatrix4fv", UniformMatrix4fv);
+      NODE_SET_PROTOTYPE_METHOD(t, "getUniformLocation", GetUniformLocation);
+      NODE_SET_PROTOTYPE_METHOD(t, "uniform1i", Uniform1i);
+      NODE_SET_PROTOTYPE_METHOD(t, "uniformMatrix4fv", UniformMatrix4fv);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "texParameterf", TexParameterf);
-        NODE_SET_PROTOTYPE_METHOD(t, "texParameteri", TexParameteri);
+      NODE_SET_PROTOTYPE_METHOD(t, "texParameterf", TexParameterf);
+      NODE_SET_PROTOTYPE_METHOD(t, "texParameteri", TexParameteri);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "createShader", CreateShader);
-        NODE_SET_PROTOTYPE_METHOD(t, "attachShader", AttachShader);
-        NODE_SET_PROTOTYPE_METHOD(t, "shaderSource", ShaderSource);
-        NODE_SET_PROTOTYPE_METHOD(t, "compileShader", CompileShader);
+      NODE_SET_PROTOTYPE_METHOD(t, "createShader", CreateShader);
+      NODE_SET_PROTOTYPE_METHOD(t, "attachShader", AttachShader);
+      NODE_SET_PROTOTYPE_METHOD(t, "shaderSource", ShaderSource);
+      NODE_SET_PROTOTYPE_METHOD(t, "compileShader", CompileShader);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "createProgram", CreateProgram);
-        NODE_SET_PROTOTYPE_METHOD(t, "linkProgram", LinkProgram);
-        NODE_SET_PROTOTYPE_METHOD(t, "useProgram", UseProgram);
+      NODE_SET_PROTOTYPE_METHOD(t, "createProgram", CreateProgram);
+      NODE_SET_PROTOTYPE_METHOD(t, "linkProgram", LinkProgram);
+      NODE_SET_PROTOTYPE_METHOD(t, "useProgram", UseProgram);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "clearColor", ClearColor);
-        NODE_SET_PROTOTYPE_METHOD(t, "clear", Clear);
+      NODE_SET_PROTOTYPE_METHOD(t, "clearColor", ClearColor);
+      NODE_SET_PROTOTYPE_METHOD(t, "clear", Clear);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "blendFunc", BlendFunc);
-        NODE_SET_PROTOTYPE_METHOD(t, "enable", Enable);
+      NODE_SET_PROTOTYPE_METHOD(t, "blendFunc", BlendFunc);
+      NODE_SET_PROTOTYPE_METHOD(t, "enable", Enable);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "drawArrays", DrawArrays);
+      NODE_SET_PROTOTYPE_METHOD(t, "drawArrays", DrawArrays);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "createTexture", CreateTexture);
-        NODE_SET_PROTOTYPE_METHOD(t, "bindTexture", BindTexture);
-        NODE_SET_PROTOTYPE_METHOD(t, "texImage2D", TexImage2D);
-        NODE_SET_PROTOTYPE_METHOD(t, "activeTexture", ActiveTexture);
-        NODE_SET_PROTOTYPE_METHOD(t, "pixelStorei", PixelStorei);
+      NODE_SET_PROTOTYPE_METHOD(t, "createTexture", CreateTexture);
+      NODE_SET_PROTOTYPE_METHOD(t, "bindTexture", BindTexture);
+      NODE_SET_PROTOTYPE_METHOD(t, "texImage2D", TexImage2D);
+      NODE_SET_PROTOTYPE_METHOD(t, "activeTexture", ActiveTexture);
+      NODE_SET_PROTOTYPE_METHOD(t, "pixelStorei", PixelStorei);
 
-        NODE_SET_PROTOTYPE_METHOD(t, "swapBuffers", SwapBuffers);
+      NODE_SET_PROTOTYPE_METHOD(t, "swapBuffers", SwapBuffers);
 
-        target->Set(String::NewSymbol("GLContext"), t->GetFunction());
+      target->Set(String::NewSymbol("GLContext"), t->GetFunction());
     }
 
-    static Handle<Object>
-    NewInstance () {
-	    return constructor_template->GetFunction()->NewInstance();
+    static Handle<Object> newInstance()
+    {
+      return m_constructorTemplate->GetFunction()->NewInstance();
     }
 
-protected:
+  protected:
 
-    static Handle<Value>
-    New (const Arguments& args) {
-        HandleScope scope;
+    static Handle<Value> constructor(const Arguments& args)
+    {
+      HandleScope scope;
 
-	GLContext *context = new GLContext();
-        context->Wrap(args.This());
+      GLContext * context = new GLContext();
+      context->Wrap(args.This());
 
-        return args.This();
+      return args.This();
     }
 
     static Handle<Value>
@@ -498,9 +499,9 @@ protected:
 	GLenum type = args[4]->IntegerValue();
 	Image *image = Unwrap<Image>(args[5]->ToObject());
 	
-	glTexImage2D(target, level, internalformat, image->GetWidth(),
-		     image->GetHeight(), 0, format,
-		     type, image->GetData());
+	glTexImage2D(target, level, internalformat, image->getWidth(),
+		     image->getHeight(), 0, format,
+		     type, image->getData());
 
 	// We have to generate mipmaps
 	glGenerateMipmapEXT(GL_TEXTURE_2D);
@@ -522,11 +523,10 @@ protected:
         proto->Set(String::New(string), Integer::New(value), ReadOnly);
     }
 
-private:
+  private:
 
-    static Persistent<FunctionTemplate> constructor_template;
-
+    static Persistent<FunctionTemplate> m_constructorTemplate;
     static const GLenum UNPACK_FLIP_Y_WEBGL = 0x9240;
 };
 
-Persistent<FunctionTemplate> GLContext::constructor_template;
+Persistent<FunctionTemplate> GLContext::m_constructorTemplate;
