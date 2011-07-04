@@ -20,7 +20,7 @@ def configure(conf):
 def build(bld):
   webgl = bld.new_task_gen("cxx", "shlib", "node_addon")
   webgl.target = "webgl"
-  webgl.source = "src/webgl.cc"
+  webgl.source = "src/WebGL.cpp"
   webgl.lib = ['freeimage']
   webgl.uselib = ["GL", "LIBGLFW"]
 

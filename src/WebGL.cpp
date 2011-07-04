@@ -6,7 +6,7 @@
 #include <GL/glfw.h>
 
 #include "glcontext.h"
-#include "image.h"
+#include "Image.h"
 
 using namespace v8;
 using namespace node;
