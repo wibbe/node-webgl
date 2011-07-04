@@ -214,12 +214,21 @@ static Handle<Value> destroy(Arguments const& args)
   return scope.Close(Boolean::New(true));
 }
 
+static Handle<Value> getContext(Arguments const& args)
+{
+  HandleScope scope;
+
+  Handle<Object> context = GLContext::newInstance();
+  return scope.Close(context);
+}
+
 extern "C" void init(Handle<Object> target)
 {
   HandleScope scope;
   
   NODE_SET_METHOD(target, "initialize", initialize);
   NODE_SET_METHOD(target, "destroy", destroy);
+  NODE_SET_METHOD(target, "getContext", getContext);
 
   GLContext::initialize(target);
   Image::initialize(target);
