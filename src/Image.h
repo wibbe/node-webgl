@@ -26,16 +26,16 @@ class Image : public EventEmitter
     {
       HandleScope scope;
 
-      Local<FunctionTemplate> t = FunctionTemplate::New(constructor);
+      Local<FunctionTemplate> t = FunctionTemplate::New(Image::constructor);
 
       t->Inherit(EventEmitter::constructor_template);
       t->InstanceTemplate()->SetInternalFieldCount(1);
 
-    	t->PrototypeTemplate()->SetAccessor(String::New("width"), WidthGetter);
-    	t->PrototypeTemplate()->SetAccessor(String::New("height"), HeightGetter);
-    	t->PrototypeTemplate()->SetAccessor(String::New("src"), SrcGetter, SrcSetter);
+    	t->PrototypeTemplate()->SetAccessor(String::New("width"), Image::widthGetter);
+    	t->PrototypeTemplate()->SetAccessor(String::New("height"), Image::heightGetter);
+    	t->PrototypeTemplate()->SetAccessor(String::New("src"), srcGetter, srcSetter);
 
-      NODE_SET_PROTOTYPE_METHOD(t, "addEventListener", AddEventListener);
+      NODE_SET_PROTOTYPE_METHOD(t, "addEventListener", addEventListener);
 
     	target->Set(String::NewSymbol("Image"), t->GetFunction());
     }
@@ -86,63 +86,59 @@ class Image : public EventEmitter
     	return args.This();
     }
 
-    static Handle<Value>
-    WidthGetter (Local<String> property, const AccessorInfo& info) {
-	HandleScope scope;
+    static Handle<Value> widthGetter(Local<String> property, AccessorInfo const& info)
+    {
+      HandleScope scope;
 
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-
-	return scope.Close(Integer::New(image->getWidth()));
+      Image * image = ObjectWrap::Unwrap<Image>(info.This());
+      return scope.Close(Integer::New(image->getWidth()));
     }
 
 
-    static Handle<Value>
-    HeightGetter (Local<String> property, const AccessorInfo& info) {
-	HandleScope scope;
+    static Handle<Value> heightGetter(Local<String> property, AccessorInfo const& info)
+    {
+      HandleScope scope;
 
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-
-	return scope.Close(Integer::New(image->getHeight()));
+      Image * image = ObjectWrap::Unwrap<Image>(info.This());
+      return scope.Close(Integer::New(image->getHeight()));
     }
 
 
-    static Handle<Value>
-    SrcGetter (Local<String> property, const AccessorInfo& info) {
-	HandleScope scope;
+    static Handle<Value> srcGetter(Local<String> property, AccessorInfo const& info)
+    {
+      HandleScope scope;
 
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-
-	return scope.Close(String::New(image->m_filename.c_str()));
+      Image * image = ObjectWrap::Unwrap<Image>(info.This());
+      return scope.Close(String::New(image->m_filename.c_str()));
     }
 
-    static void
-    SrcSetter (Local<String> property, Local<Value> value, const AccessorInfo& info) {
-	HandleScope scope;
+    static void srcSetter(Local<String> property, Local<Value> value, AccessorInfo const& info)
+    {
+      HandleScope scope;
 
-	Image *image = ObjectWrap::Unwrap<Image>(info.This());
-	String::Utf8Value filename_s(value->ToString());
-	image->load(*filename_s);
+      Image * image = ObjectWrap::Unwrap<Image>(info.This());
+      String::Utf8Value filename(value->ToString());
+      image->load(*filename);
 
-	image->Emit(String::New("load"), 0, NULL);
+      image->Emit(String::New("load"), 0, NULL);
     }
 
-    static Handle<Value>
-    AddEventListener (const Arguments& args) {
-        HandleScope scope;
+    static Handle<Value> addEventListener(Arguments const& args)
+    {
+      HandleScope scope;
 
-	// Fallback to addListener
+      // Fallback to addListener
+      Local<Value> f_v = args.This()->Get(String::New("addListener"));
+      if (!f_v->IsFunction())
+        return Undefined();
 
-	Local<Value> f_v = args.This()->Get(String::New("addListener"));
-	if (!f_v->IsFunction()) return Undefined();
+      Local<Function> func = Local<Function>::Cast(f_v);
+      Handle<Value> values[args.Length()];
+      
+      for (int i = 0; i < args.Length(); ++i)
+        values[i] = args[i];
 
-	Local<Function> f = Local<Function>::Cast(f_v);
-
-	Handle<Value> values[args.Length()];
-	for(int i = 0; i < args.Length(); i++) {
-	    values[i] = args[i];
-	}
-	
-	return f->Call(args.This(), args.Length(), values);
+      return func->Call(args.This(), args.Length(), values);
     }
 
   private:

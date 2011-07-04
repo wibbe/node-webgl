@@ -5,7 +5,7 @@
 #include <FreeImage.h>
 #include <GL/glfw.h>
 
-#include "glcontext.h"
+#include "GLContext.h"
 #include "Image.h"
 
 using namespace v8;
