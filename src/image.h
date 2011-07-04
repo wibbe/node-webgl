@@ -76,7 +76,6 @@ class Image : public EventEmitter
     }
 
   protected:
-
     static Handle<Value> constructor(Arguments const& args)
     {
     	HandleScope scope;

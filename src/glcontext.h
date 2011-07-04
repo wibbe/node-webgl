@@ -83,7 +83,7 @@ class GLContext : public ObjectWrap
     	// WebGL-specific enums
     	SetConstant(proto, "UNPACK_FLIP_Y_WEBGL", UNPACK_FLIP_Y_WEBGL);
 	
-  	// Methods
+  	  // Methods
       NODE_SET_PROTOTYPE_METHOD(t, "viewport", Viewport);
 
       NODE_SET_PROTOTYPE_METHOD(t, "createBuffer", CreateBuffer);
@@ -513,7 +513,7 @@ class GLContext : public ObjectWrap
     SwapBuffers (const Arguments& args) {
         HandleScope scope;
 
-	SDL_GL_SwapBuffers();
+	//SDL_GL_SwapBuffers();
 
         return Undefined();
     }

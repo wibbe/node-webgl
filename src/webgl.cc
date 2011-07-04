@@ -1,10 +1,9 @@
-#include <SDL/SDL.h>
 
 #include <v8.h>
-
 #include <node.h>
 #include <node_events.h>
 #include <FreeImage.h>
+#include <GL/glfw.h>
 
 #include "glcontext.h"
 #include "image.h"
