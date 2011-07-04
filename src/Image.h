@@ -144,7 +144,6 @@ class Image : public EventEmitter
   private:
     FIBITMAP * m_image;
     std::string m_filename;
-    void * m_data;
 };
 
 #endif  // IMAGE_H_
