@@ -84,7 +84,7 @@ class GLContext : public ObjectWrap
     	SetConstant(proto, "UNPACK_FLIP_Y_WEBGL", UNPACK_FLIP_Y_WEBGL);
 	
   	  // Methods
-      NODE_SET_PROTOTYPE_METHOD(t, "viewport", Viewport);
+      NODE_SET_PROTOTYPE_METHOD(t, "viewport", viewport);
 
       NODE_SET_PROTOTYPE_METHOD(t, "createBuffer", CreateBuffer);
       NODE_SET_PROTOTYPE_METHOD(t, "bindBuffer", BindBuffer);
@@ -121,11 +121,11 @@ class GLContext : public ObjectWrap
 
       NODE_SET_PROTOTYPE_METHOD(t, "createTexture", CreateTexture);
       NODE_SET_PROTOTYPE_METHOD(t, "bindTexture", BindTexture);
-      NODE_SET_PROTOTYPE_METHOD(t, "texImage2D", TexImage2D);
+      NODE_SET_PROTOTYPE_METHOD(t, "texImage2D", texImage2D);
       NODE_SET_PROTOTYPE_METHOD(t, "activeTexture", ActiveTexture);
       NODE_SET_PROTOTYPE_METHOD(t, "pixelStorei", PixelStorei);
 
-      NODE_SET_PROTOTYPE_METHOD(t, "swapBuffers", SwapBuffers);
+      NODE_SET_PROTOTYPE_METHOD(t, "swapBuffers", swapBuffers);
 
       target->Set(String::NewSymbol("GLContext"), t->GetFunction());
     }
@@ -137,7 +137,7 @@ class GLContext : public ObjectWrap
 
   protected:
 
-    static Handle<Value> constructor(const Arguments& args)
+    static Handle<Value> constructor(Arguments const& args)
     {
       HandleScope scope;
 
@@ -147,17 +147,18 @@ class GLContext : public ObjectWrap
       return args.This();
     }
 
-    static Handle<Value>
-    Viewport (const Arguments& args) {
-        HandleScope scope;
+    static Handle<Value> viewport(Arguments const& args)
+    {
+      HandleScope scope;
 
-	GLint x = args[0]->IntegerValue();
-	GLint y = args[1]->IntegerValue();
-	GLsizei width = args[2]->IntegerValue();
-	GLsizei height = args[3]->IntegerValue();
-	glViewport(x, y, width, height);
+      GLint x = args[0]->IntegerValue();
+      GLint y = args[1]->IntegerValue();
+      GLsizei width = args[2]->IntegerValue();
+      GLsizei height = args[3]->IntegerValue();
+      
+      glViewport(x, y, width, height);
 
-        return Undefined();
+      return Undefined();
     }
 
     static Handle<Value>
@@ -488,34 +489,30 @@ class GLContext : public ObjectWrap
         return Undefined();
     }
 
-    static Handle<Value>
-    TexImage2D (const Arguments& args) {
-	HandleScope scope;
+    static Handle<Value> texImage2D(const Arguments& args)
+    {
+      HandleScope scope;
 
-	GLenum target = args[0]->Uint32Value();
-	GLint level = args[1]->IntegerValue();
-	GLenum internalformat = args[2]->IntegerValue();
-	GLenum format = args[3]->IntegerValue();
-	GLenum type = args[4]->IntegerValue();
-	Image *image = Unwrap<Image>(args[5]->ToObject());
-	
-	glTexImage2D(target, level, internalformat, image->getWidth(),
-		     image->getHeight(), 0, format,
-		     type, image->getData());
+      GLenum target = args[0]->Uint32Value();
+      GLint level = args[1]->IntegerValue();
+      GLenum internalformat = args[2]->IntegerValue();
+      GLenum format = args[3]->IntegerValue();
+      GLenum type = args[4]->IntegerValue();
+      Image *image = Unwrap<Image>(args[5]->ToObject());
 
-	// We have to generate mipmaps
-	glGenerateMipmapEXT(GL_TEXTURE_2D);
+      glTexImage2D(target, level, internalformat, image->getWidth(), image->getHeight(), 0, format, type, image->getData());
 
-	return Undefined();
+      // We have to generate mipmaps
+      glGenerateMipmapEXT(GL_TEXTURE_2D);
+
+      return Undefined();
     }
 
-    static Handle<Value>
-    SwapBuffers (const Arguments& args) {
-        HandleScope scope;
-
-	//SDL_GL_SwapBuffers();
-
-        return Undefined();
+    static Handle<Value> swapBuffers(Arguments const& args)
+    {
+      HandleScope scope;
+      glfwSwapBuffers();
+      return Undefined();
     }
 
     static void
