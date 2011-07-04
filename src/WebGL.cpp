@@ -186,6 +186,14 @@ private:
 Window *Window::window;
 */
 
+static bool isWindowClosed = true;
+
+static int windowClosedCallback()
+{
+  isWindowClosed = true;
+  return 1;
+}
+
 static Handle<Value> initialize(Arguments const& args)
 {
   HandleScope scope;
@@ -199,6 +207,10 @@ static Handle<Value> initialize(Arguments const& args)
   glfwInit();
   glfwOpenWindow(width, height, 8, 8, 8, 0, 24, 0, fullscreen);
   
+  glfwSetWindowCloseCallback(windowClosedCallback);
+  
+  isWindowClosed = false;
+  
   return scope.Close(Boolean::New(true));
 }
 
@@ -209,7 +221,7 @@ static Handle<Value> destroy(Arguments const& args)
   glfwCloseWindow();
   glfwTerminate();
   
-  FreeImage_DeInitialise();  
+  FreeImage_DeInitialise();
 
   return scope.Close(Boolean::New(true));
 }
@@ -222,6 +234,15 @@ static Handle<Value> getContext(Arguments const& args)
   return scope.Close(context);
 }
 
+static Handle<Value> tick(Arguments const& args)
+{
+  HandleScope scope;
+  
+  glfwPollEvents();
+  
+  return scope.Close(Boolean::New(!isWindowClosed));
+}
+
 extern "C" void init(Handle<Object> target)
 {
   HandleScope scope;
@@ -229,6 +250,7 @@ extern "C" void init(Handle<Object> target)
   NODE_SET_METHOD(target, "initialize", initialize);
   NODE_SET_METHOD(target, "destroy", destroy);
   NODE_SET_METHOD(target, "getContext", getContext);
+  NODE_SET_METHOD(target, "tick", tick);
 
   GLContext::initialize(target);
   Image::initialize(target);
