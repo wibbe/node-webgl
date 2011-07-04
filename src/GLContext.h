@@ -112,7 +112,7 @@ class GLContext : public ObjectWrap
       NODE_SET_PROTOTYPE_METHOD(t, "useProgram", UseProgram);
 
       NODE_SET_PROTOTYPE_METHOD(t, "clearColor", ClearColor);
-      NODE_SET_PROTOTYPE_METHOD(t, "clear", Clear);
+      NODE_SET_PROTOTYPE_METHOD(t, "clear", clear);
 
       NODE_SET_PROTOTYPE_METHOD(t, "blendFunc", BlendFunc);
       NODE_SET_PROTOTYPE_METHOD(t, "enable", Enable);
@@ -418,14 +418,14 @@ class GLContext : public ObjectWrap
         return Undefined();
     }
 
-    static Handle<Value>
-    Clear (const Arguments& args) {
-        HandleScope scope;
+    static Handle<Value> clear(Arguments const& args)
+    {
+      HandleScope scope;
 
-	GLbitfield mask = args[0]->Int32Value();
-	glClear(mask);
+      GLbitfield mask = args[0]->Int32Value();
+      glClear(mask);
 
-        return Undefined();
+      return Undefined();
     }
 
     static Handle<Value>
